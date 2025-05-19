@@ -1,6 +1,7 @@
 # Robby 🤖
 > Create an AI Agent with Docker Model Runner and Docker MCP Toolkit
 
+From a programming perspective, what is an AI Agent?
 
 ## Chat Agent
 
