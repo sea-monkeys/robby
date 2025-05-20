@@ -80,7 +80,6 @@ func TestSimpleTools(t *testing.T) {
 	toolCallsJSON, _ := ToolCallsToJSONString(toolCalls)
 	fmt.Println("Tool Calls:\n", toolCallsJSON)
 
-
 	results, err := bob.ExecuteToolCalls(map[string]func(any) (any, error){
 		"say_hello": func(args any) (any, error) {
 			name := args.(map[string]any)["name"].(string)
@@ -99,7 +98,6 @@ func TestSimpleTools(t *testing.T) {
 
 	fmt.Println("Result of the tool calls execution:")
 	for _, result := range results {
-		fmt.Println("---------------------------------")
 		fmt.Println(result)
 	}
 }
