@@ -96,7 +96,7 @@ func TestSimpleTools(t *testing.T) {
 		return
 	}
 
-	fmt.Println("Result of the tool calls execution:")
+	fmt.Println("\nResult of the tool calls execution:")
 	for _, result := range results {
 		fmt.Println(result)
 	}
