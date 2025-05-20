@@ -20,7 +20,7 @@ func TestChat(t *testing.T) {
 				Model: "ai/qwen2.5:latest",
 				Messages: []openai.ChatCompletionMessageParamUnion{
 					openai.SystemMessage("You are a pizza expert"),
-					openai.UserMessage("What is the best pizza in the world?"),
+					openai.UserMessage("[Brief] What is the best pizza in the world?"),
 				},
 				Temperature: openai.Opt(0.9),
 			},
