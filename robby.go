@@ -20,8 +20,11 @@ type Agent struct {
 	mcpClient *mcp_golang.Client
 	mcpCmd    *exec.Cmd
 	//messages   []openai.ChatCompletionMessageParamUnion
-	Params    openai.ChatCompletionNewParams
-	Tools     []openai.ChatCompletionToolParam
+	Params openai.ChatCompletionNewParams
+	Tools  []openai.ChatCompletionToolParam
+
+	ToolCalls []openai.ChatCompletionMessageToolCall
+
 	lastError error
 	//lastResult any
 
@@ -114,7 +117,14 @@ func WithMCPToolkitClient(command STDIOCommandOption) AgentOption {
 	}
 }
 
-func WithTools(tools []string) AgentOption {
+// TODO-> To be implemented
+func WithTools(tools []openai.ChatCompletionToolParam) AgentOption {
+	return func(agent *Agent) {
+		agent.Tools = tools
+	}
+}
+
+func WithMCPTools(tools []string) AgentOption {
 	return func(agent *Agent) {
 
 		// Get the tools from the MCP client
@@ -216,11 +226,11 @@ func (agent *Agent) ChatCompletionStream(callBack func(self *Agent, content stri
 	return response, nil
 }
 
-func (agent *Agent) ToolsCompletion() ([]string, error) {
+func (agent *Agent) ToolsCompletion() ([]openai.ChatCompletionMessageToolCall, error) {
 	// Check if the MCP client is initialized
-	if agent.mcpClient == nil {
-		return nil, errors.New("MCP client is not initialized")
-	}
+	//if agent.mcpClient == nil {
+	//	return nil, errors.New("MCP client is not initialized")
+	//}
 
 	agent.Params.Tools = agent.Tools
 
@@ -233,11 +243,48 @@ func (agent *Agent) ToolsCompletion() ([]string, error) {
 	if len(detectedToolCalls) == 0 {
 		return nil, errors.New("no tool calls detected")
 	}
+	agent.ToolCalls = detectedToolCalls
+
+	return detectedToolCalls, nil
+}
+
+// TODO-> to be implemented
+func (agent *Agent) ToolsLoopCompletion() ([]string, error) {
+	return nil, nil
+}
+
+func (agent *Agent) ExecuteToolCalls(toolsImpl map[string]func(any) any) ([]string, error) {
 	responses := []string{}
-	for _, toolCall := range detectedToolCalls {
+	for _, toolCall := range agent.ToolCalls {
+		// Check if the tool is implemented
+		toolFunc, ok := toolsImpl[toolCall.Function.Name]
+		if !ok {
+			return nil, fmt.Errorf("tool %s not implemented", toolCall.Function.Name)
+		}
 
 		var args map[string]any
-		err = json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+		err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+		if err != nil {
+			return nil, err
+		}
+
+		// Call the tool with the arguments
+		response := toolFunc(args)
+		responses = append(responses, fmt.Sprintf("%v", response))
+	}
+	if len(responses) == 0 {
+		return nil, errors.New("no tool responses found")
+	}
+	return responses, nil
+}
+
+func (agent *Agent) ExecuteMCPToolCalls() ([]string, error) {
+
+	responses := []string{}
+	for _, toolCall := range agent.ToolCalls {
+
+		var args map[string]any
+		err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
 		if err != nil {
 			return nil, err
 		}
@@ -265,11 +312,6 @@ func (agent *Agent) ToolsCompletion() ([]string, error) {
 	return responses, nil
 }
 
-// TODO to be implemented
-func (agent *Agent) ToolsLoopCompletion() ([]string, error) {
-	return nil, nil
-}
-
 func convertToOpenAITools(tools []mcp_golang.ToolRetType) []openai.ChatCompletionToolParam {
 	openAITools := make([]openai.ChatCompletionToolParam, len(tools))
 
@@ -288,4 +330,42 @@ func convertToOpenAITools(tools []mcp_golang.ToolRetType) []openai.ChatCompletio
 		}
 	}
 	return openAITools
+}
+
+func ToolCallsToJSONString(tools []openai.ChatCompletionMessageToolCall) (string, error) {
+	// Create a temporary structure to handle the proper JSON marshaling
+	type Function struct {
+		Name      string          `json:"name"`
+		Arguments json.RawMessage `json:"arguments"`
+	}
+
+	type ToolCall struct {
+		ID       string   `json:"id"`
+		Function Function `json:"function"`
+	}
+
+	// Convert the tools to our temporary structure
+	tempTools := make([]ToolCall, len(tools))
+	for i, tool := range tools {
+		// Parse the arguments string as raw JSON
+		var rawArgs json.RawMessage
+		if err := json.Unmarshal([]byte(tool.Function.Arguments), &rawArgs); err != nil {
+			return "", err
+		}
+
+		tempTools[i] = ToolCall{
+			ID: tool.ID,
+			Function: Function{
+				Name:      tool.Function.Name,
+				Arguments: rawArgs,
+			},
+		}
+	}
+
+	// Marshal with indentation
+	jsonString, err := json.MarshalIndent(tempTools, "", "    ")
+	if err != nil {
+		return "", err
+	}
+	return string(jsonString), nil
 }

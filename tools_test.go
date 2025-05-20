@@ -40,18 +40,31 @@ func TestTools(t *testing.T) {
 				"TCP:host.docker.internal:8811",
 			}),
 		*/
-		WithTools([]string{"brave_web_search"}),
+		WithMCPTools([]string{"brave_web_search"}),
 	)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
-	results, err := bob.ToolsCompletion() // This add the Tools to the agent.Params
+	toolCalls, err := bob.ToolsCompletion() // This add the Tools to the agent.Params
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
-	
+	toolCallsJSON, _ := ToolCallsToJSONString(toolCalls)
+	fmt.Println("Tool Calls:\n", toolCallsJSON)
+
+	if len(toolCalls) == 0 {
+		fmt.Println("No tools found.")
+		return
+	}
+
+	results, err := bob.ExecuteMCPToolCalls()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
 	fmt.Println("Tools Done:")
 	for idx, result := range results {
 		fmt.Println("---------------------------------")
