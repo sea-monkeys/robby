@@ -1,0 +1,4 @@
+there is no real test in:
+- agent_mcp_test.go
+- chat_test.go
+- simple_tools_test.go
