@@ -282,6 +282,15 @@ func (agent *Agent) ExecuteMCPToolCalls() ([]string, error) {
 	return responses, nil
 }
 
+func (agent *Agent) ToolCallsToJSON() (string, error) {
+    if len(agent.ToolCalls) == 0 {
+        return "[]", nil
+    }
+    return ToolCallsToJSONString(agent.ToolCalls)
+}
+
+// --- Helpers ---
+
 func ToolCallsToJSONString(tools []openai.ChatCompletionMessageToolCall) (string, error) {
 	var jsonData []any
 
