@@ -1,10 +1,6 @@
 # Robby 🤖
 > Create an AI Agent with Docker Model Runner and Docker MCP Toolkit
 
-Je vais vous fournir une explication en anglais pour le README concernant ce projet "Robby".
-
-## Project Purpose Explanation
-
 **Robby** is not intended to become a full-fledged framework. It is designed as a lightweight library that implements design patterns to help developers build **AI Agents** using the **OpenAI Go SDK** in conjunction with **[Docker Model Runner](https://docs.docker.com/model-runner/)** and **[Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/toolkit/)**. 
 
 The goal is not to hide or abstract away the OpenAI SDK usage, but rather to provide helpful utilities that simplify the developer experience. **Robby** offers convenience methods and patterns that make it easier to work with these technologies while still allowing direct access to the underlying SDK functionality when needed.
