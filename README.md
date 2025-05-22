@@ -32,7 +32,7 @@ Rather than hiding the OpenAI SDK, Robby enhances your development experience wi
 ### Installation
 
 ```bash
-go get github.com/sea-monkeys/robby@v0.0.0
+go get github.com/sea-monkeys/robby@v0.0.1
 ```
 
 ### Basic Usage
@@ -381,7 +381,7 @@ Run the test suite:
 
 ## 🚧 Development Status
 
-Robby is currently in **v0.0.0** - early development phase. The API may change as we gather feedback and add features. 
+Robby is currently in **v0.0.1** - early development phase. The API may change as we gather feedback and add features. 
 
 **Planned Features:**
 - Enhanced error handling and recovery
