@@ -1,0 +1,1 @@
+The four operations, addition, subtraction, multiolication and division form the foundation of arithmetic and are essential functions in any basic calculator or computing device. More advanced calculation machines can perform additional operations like exponentiation, square roots, trigonometric functions, and logarithms, but these four remain the core mathematical operations.

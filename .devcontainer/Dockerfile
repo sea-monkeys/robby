@@ -1,4 +1,3 @@
-#FROM --platform=$BUILDPLATFORM ubuntu:23.10
 FROM --platform=$BUILDPLATFORM ubuntu:22.04
 
 
@@ -8,7 +7,11 @@ ARG TARGETOS
 ARG TARGETARCH
 
 ARG GO_VERSION=${GO_VERSION}
+ARG TINYGO_VERSION=${TINYGO_VERSION}
+ARG EXTISM_VERSION=${EXTISM_VERSION}
 ARG NODE_MAJOR=${NODE_MAJOR}
+
+ARG RUST_VERSION=${RUST_VERSION}
 
 ARG USER_NAME=${USER_NAME}
 
@@ -24,7 +27,7 @@ ENV LC_CTYPE=en_US.UTF-8
 # ------------------------------------
 RUN <<EOF
 apt-get update 
-apt-get install -y curl wget git build-essential xz-utils bat software-properties-common sudo sshpass
+apt-get install -y curl wget jq git build-essential xz-utils bat software-properties-common sudo sshpass unzip
 ln -s /usr/bin/batcat /usr/bin/bat
 
 apt-get clean autoclean
@@ -58,6 +61,29 @@ go install -v github.com/stamblerre/gocode@v1.0.0
 go install -v github.com/mgechev/revive@v1.3.2
 EOF
 
+
+# ------------------------------------
+# Install TinyGo
+# ------------------------------------
+RUN <<EOF
+wget https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo_${TINYGO_VERSION}_${TARGETARCH}.deb
+dpkg -i tinygo_${TINYGO_VERSION}_${TARGETARCH}.deb
+rm tinygo_${TINYGO_VERSION}_${TARGETARCH}.deb
+EOF
+
+
+# ------------------------------------
+# Install Extism CLI
+# ------------------------------------
+RUN <<EOF
+wget https://github.com/extism/cli/releases/download/v${EXTISM_VERSION}/extism-v${EXTISM_VERSION}-linux-${TARGETARCH}.tar.gz
+    
+tar -xf extism-v${EXTISM_VERSION}-linux-${TARGETARCH}.tar.gz -C /usr/bin
+rm extism-v${EXTISM_VERSION}-linux-${TARGETARCH}.tar.gz
+    
+#extism --version
+EOF
+
 # ------------------------------------
 # Install NodeJS
 # ------------------------------------
@@ -87,6 +113,22 @@ echo \
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 EOF
+
+# ------------------------------------
+# Install dependencies for Rust 
+# and wasm
+# ------------------------------------
+RUN <<EOF
+# Additional dependencies for Rust
+apt-get update
+apt-get install -y pkg-config libssl-dev clang lld cmake
+
+# Clean up
+apt-get clean autoclean
+apt-get autoremove --yes
+rm -rf /var/lib/{apt,dpkg,cache,log}/
+EOF
+
 
 # ------------------------------------
 # Create a new user
@@ -130,3 +172,26 @@ RUN touch ~/.sudo_as_admin_successful
 RUN <<EOF
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
 EOF
+
+
+# ------------------------------------
+# Install Rust
+# ------------------------------------
+RUN <<EOF
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION}
+. $HOME/.cargo/env
+
+# Install WebAssembly target
+rustup target add wasm32-wasi
+rustup target add wasm32-unknown-unknown
+rustup target add wasm32-wasip1
+
+# Install helpful Rust tools
+cargo install wasm-pack --force
+cargo install wasm-tools
+cargo install wasm-bindgen-cli
+cargo install cargo-generate
+EOF
+
+# Add cargo bin to PATH
+ENV PATH="/home/${USER_NAME}/.cargo/bin:${PATH}"

@@ -1,16 +1,20 @@
-module github.com/sea-monkeys/robby
+module use-my-mcp-server
 
 go 1.24.0
 
-require github.com/metoro-io/mcp-golang v0.13.0
+replace github.com/sea-monkeys/robby => ../..
+
+require (
+	github.com/openai/openai-go v1.1.0
+	github.com/sea-monkeys/robby v0.0.1
+)
 
 require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect
-	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
-	github.com/openai/openai-go v1.1.0 // indirect
+	github.com/metoro-io/mcp-golang v0.13.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect

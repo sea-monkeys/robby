@@ -14,6 +14,15 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
+type Resource struct {
+	URI         string `json:"uri"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	MimeType    string `json:"mimeType,omitempty"`
+	Text        string `json:"text,omitempty"`
+	Blob        string `json:"blob,omitempty"`
+}
+
 type Agent struct {
 	ctx       context.Context
 	dmrClient openai.Client
@@ -21,6 +30,8 @@ type Agent struct {
 
 	Tools     []openai.ChatCompletionToolParam
 	ToolCalls []openai.ChatCompletionMessageToolCall
+
+	Resources []Resource
 
 	mcpClient *mcp_golang.Client
 	mcpCmd    *exec.Cmd
@@ -111,6 +122,12 @@ func WithMCPClient(command STDIOCommandOption) AgentOption {
 	}
 }
 
+// WithMCPTools fetches the tools from the MCP server and sets them in the agent.
+// It filters the tools based on the provided names and converts them to OpenAI format.
+// It requires the MCP server to be running and accessible at the specified address.
+// The tools are expected to be in the format defined by the MCP server.
+// It returns an AgentOption that can be used to configure the agent.
+// The tools are fetched using the MCP client and converted to OpenAI format.
 func WithMCPTools(tools []string) AgentOption {
 	return func(agent *Agent) {
 
@@ -121,19 +138,66 @@ func WithMCPTools(tools []string) AgentOption {
 			return
 		}
 
-		// Convert the tools to OpenAI format
-		filteredTools := []mcp_golang.ToolRetType{}
-		for _, tool := range mcpTools.Tools {
-			for _, t := range tools {
-				if tool.Name == t {
-					filteredTools = append(filteredTools, tool)
+		if len(tools) == 0 {
+			// If no tools are specified, use all available tools
+			// Convert the tools to OpenAI format
+			agent.Tools = convertToOpenAITools(mcpTools.Tools)
+		} else {
+			filteredTools := []mcp_golang.ToolRetType{}
+			for _, tool := range mcpTools.Tools {
+				for _, t := range tools {
+					if tool.Name == t {
+						filteredTools = append(filteredTools, tool)
+					}
 				}
 			}
+			// Convert the tools to OpenAI format
+			agent.Tools = convertToOpenAITools(filteredTools)
 		}
-
-		agent.Tools = convertToOpenAITools(filteredTools)
 	}
 }
+
+func WithMCPResources(resources []string) AgentOption {
+	return func(agent *Agent) {
+		// Get the resources from the MCP client
+		mcpResources, err := agent.mcpClient.ListResources(agent.ctx, nil)
+		if err != nil {
+			agent.lastError = err
+			return
+		}
+		resourcesList := []Resource{}
+		if len(resources) == 0 {
+			// If no resources are specified, use all available resources
+			for _, resource := range mcpResources.Resources {
+				resourcesList = append(resourcesList, Resource{
+					URI:         resource.Uri,
+					Name:        resource.Name,
+					Description: *resource.Description,
+					MimeType:    *resource.MimeType,
+				})
+			}
+
+		} else {
+			//filteredResources := []mcp_golang.ResourceRetType{}
+			for _, resource := range mcpResources.Resources {
+				for _, r := range resources {
+					if resource.Name == r {
+						resourcesList = append(resourcesList, Resource{
+							URI:         resource.Uri,
+							Name:        resource.Name,
+							Description: *resource.Description,
+							MimeType:    *resource.MimeType,
+						})
+					}
+				}
+
+			}
+		}
+		agent.Resources = resourcesList
+
+	}
+}
+
 
 func NewAgent(options ...AgentOption) (*Agent, error) {
 
@@ -283,10 +347,41 @@ func (agent *Agent) ExecuteMCPToolCalls() ([]string, error) {
 }
 
 func (agent *Agent) ToolCallsToJSON() (string, error) {
-    if len(agent.ToolCalls) == 0 {
-        return "[]", nil
-    }
-    return ToolCallsToJSONString(agent.ToolCalls)
+	if len(agent.ToolCalls) == 0 {
+		return "[]", nil
+	}
+	return ToolCallsToJSONString(agent.ToolCalls)
+}
+
+
+// TODO-> pagination, righ now, only resource text is returned
+func (agent *Agent) ReadResource(uri string) (Resource, error) {
+	mcpResourceResponse, err := agent.mcpClient.ReadResource(agent.ctx, uri)
+	if err != nil {
+		return Resource{}, fmt.Errorf("failed to read resource %s: %v", uri, err)
+	}
+
+	mcpResource := mcpResourceResponse.Contents[0]
+
+	resource := Resource{}
+	// search for the name and description in the agent resources
+	for _, rsrc := range agent.Resources {
+		if rsrc.URI == mcpResource.TextResourceContents.Uri {
+			resource.Name = rsrc.Name
+			resource.Description = rsrc.Description
+		}
+	}
+	resource.URI = mcpResource.TextResourceContents.Uri
+	resource.MimeType = *mcpResource.TextResourceContents.MimeType
+	resource.Text = mcpResource.TextResourceContents.Text
+
+	return resource, nil
+}
+
+
+// TODO-> to be implemented
+func (agent *Agent) ReadResourceByName(name string) (Resource, error) {
+	return Resource{}, errors.New("not implemented yet")
 }
 
 // --- Helpers ---
