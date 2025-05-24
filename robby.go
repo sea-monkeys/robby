@@ -23,6 +23,23 @@ type Resource struct {
 	Blob        string `json:"blob,omitempty"`
 }
 
+type Content struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type Message struct {
+	Role    string  `json:"role"`
+	Content Content `json:"content"`
+}
+
+type Prompt struct {
+	Name        string           `json:"name"`
+	Description string           `json:"description,omitempty"`
+	Arguments   []map[string]any `json:"arguments"`
+	Messages    []Message        `json:"messages,omitempty"` // Optional, for storing messages related to the prompt
+}
+
 type Agent struct {
 	ctx       context.Context
 	dmrClient openai.Client
@@ -32,6 +49,7 @@ type Agent struct {
 	ToolCalls []openai.ChatCompletionMessageToolCall
 
 	Resources []Resource
+	Prompts   []Prompt
 
 	mcpClient *mcp_golang.Client
 	mcpCmd    *exec.Cmd
@@ -178,7 +196,6 @@ func WithMCPResources(resources []string) AgentOption {
 			}
 
 		} else {
-			//filteredResources := []mcp_golang.ResourceRetType{}
 			for _, resource := range mcpResources.Resources {
 				for _, r := range resources {
 					if resource.Name == r {
@@ -194,10 +211,60 @@ func WithMCPResources(resources []string) AgentOption {
 			}
 		}
 		agent.Resources = resourcesList
-
 	}
 }
 
+// TODO -> factorize the arguments conversion
+func WithMCPPrompts(prompts []string) AgentOption {
+	return func(agent *Agent) {
+		mcpPrompts, err := agent.mcpClient.ListPrompts(agent.ctx, nil)
+		if err != nil {
+			agent.lastError = err
+			return
+		}
+		promptsList := []Prompt{}
+		if len(prompts) == 0 {
+			// If no prompts are specified, use all available prompts
+			for _, prompt := range mcpPrompts.Prompts {
+				// Convert []mcp_golang.PromptSchemaArgument to []map[string]any
+				args := make([]map[string]any, len(prompt.Arguments))
+				for i, arg := range prompt.Arguments {
+					// Marshal to JSON then unmarshal to map[string]any
+					b, _ := json.Marshal(arg)
+					_ = json.Unmarshal(b, &args[i])
+				}
+				promptsList = append(promptsList, Prompt{
+					Name:        prompt.Name,
+					Description: *prompt.Description,
+					Arguments:   args,
+				})
+			}
+
+		} else {
+			for _, prompt := range mcpPrompts.Prompts {
+				for _, p := range prompts {
+					if prompt.Name == p {
+						// Convert []mcp_golang.PromptSchemaArgument to []map[string]any
+						args := make([]map[string]any, len(prompt.Arguments))
+						for i, arg := range prompt.Arguments {
+							// Marshal to JSON then unmarshal to map[string]any
+							b, _ := json.Marshal(arg)
+							_ = json.Unmarshal(b, &args[i])
+						}
+						promptsList = append(promptsList, Prompt{
+							Name:        prompt.Name,
+							Description: *prompt.Description,
+							Arguments:   args,
+						})
+					}
+				}
+
+			}
+		}
+		agent.Prompts = promptsList
+	}
+
+}
 
 func NewAgent(options ...AgentOption) (*Agent, error) {
 
@@ -353,7 +420,6 @@ func (agent *Agent) ToolCallsToJSON() (string, error) {
 	return ToolCallsToJSONString(agent.ToolCalls)
 }
 
-
 // TODO-> pagination, righ now, only resource text is returned
 func (agent *Agent) ReadResource(uri string) (Resource, error) {
 	mcpResourceResponse, err := agent.mcpClient.ReadResource(agent.ctx, uri)
@@ -369,8 +435,11 @@ func (agent *Agent) ReadResource(uri string) (Resource, error) {
 		if rsrc.URI == mcpResource.TextResourceContents.Uri {
 			resource.Name = rsrc.Name
 			resource.Description = rsrc.Description
+			break
 		}
 	}
+	//? is there a better way to find the name and description in the list of resources?
+
 	resource.URI = mcpResource.TextResourceContents.Uri
 	resource.MimeType = *mcpResource.TextResourceContents.MimeType
 	resource.Text = mcpResource.TextResourceContents.Text
@@ -378,10 +447,45 @@ func (agent *Agent) ReadResource(uri string) (Resource, error) {
 	return resource, nil
 }
 
-
 // TODO-> to be implemented
 func (agent *Agent) ReadResourceByName(name string) (Resource, error) {
 	return Resource{}, errors.New("not implemented yet")
+}
+
+func (agent *Agent) GetPrompt(name string, args any) (Prompt, error) {
+
+	mcpPromptResponse, err := agent.mcpClient.GetPrompt(agent.ctx, name, args)
+	if err != nil {
+		return Prompt{}, fmt.Errorf("failed to get prompt %s: %v", name, err)
+	}
+
+	messages := []Message{}
+	for _, msg := range mcpPromptResponse.Messages {
+			messages = append(messages, Message{
+				Role: string(msg.Role),
+				Content: Content{
+					Type: string(msg.Content.Type),
+					Text: msg.Content.TextContent.Text,
+				},
+			})
+	}
+
+	description := ""
+	for _, prompt := range agent.Prompts {
+		if prompt.Name == name {
+			description = prompt.Description
+			break
+		}
+	}
+	//? is there a better way to find the description in the list of prompts?
+
+	mcpPrompt := Prompt{
+		Name:        name,
+		Description: description,
+		Messages:    messages,
+	}
+
+	return mcpPrompt, nil
 }
 
 // --- Helpers ---

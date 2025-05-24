@@ -48,7 +48,7 @@ func main() {
 		robby.WithMCPTools([]string{"add", "subtract", "multiply", "divide"}), 
 		//robby.WithMCPTools([]string{}), 
 		robby.WithMCPResources([]string{}),
-
+		robby.WithMCPPrompts([]string{}),
 	)
 
 	// Generate the tools detection completion
@@ -93,5 +93,29 @@ func main() {
 	fmt.Println(addRsrc.Description,":")
 	fmt.Println(addRsrc.Text) // Read the resource for calculator information
 	fmt.Println("--------------------------------------")
+	fmt.Println("Prompts List:")
+	for _, prompt := range bob.Prompts {
+		fmt.Println("Name: ", prompt.Name)
+		fmt.Println("Description:", prompt.Description)
+		fmt.Println("Args:", prompt.Arguments)
+
+	}
+	fmt.Println("--------------------------------------")
+	fmt.Println("Prompt Get:")
+
+	args := map[string]any{
+		"operation": "add",
+		"a":         5,
+		"b":         3,
+	}
+
+	prompt, err := bob.GetPrompt("calculator_prompt", args)
+	if err != nil {
+		fmt.Println("Error getting prompt:", err)
+		return
+	}
+	fmt.Println("Prompt Name:", prompt.Name)
+	fmt.Println("Prompt Description:", prompt.Description)
+	fmt.Println(prompt.Messages[0].Role, ":", prompt.Messages[0].Content.Text)
 
 }

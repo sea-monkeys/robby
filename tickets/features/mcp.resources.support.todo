@@ -1,0 +1,3 @@
+- Pagination
+- Something else than Text
+- mcpResourceResponse.Contents[0] -> why Contents is an array/slice?
