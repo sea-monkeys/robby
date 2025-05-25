@@ -6,5 +6,9 @@
       "aaron-bond.better-comments",
       "hediet.vscode-drawio",
       "hashicorp.hcl",
+      "anseki.vscode-color",
+      "jeronimoekerdt.color-picker-universal",
+      "jgclark.vscode-todo-highlight",
+      "wayou.vscode-todo-highlight"
     ]
 }

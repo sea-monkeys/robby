@@ -1,4 +1,4 @@
-module simple-chat-stream-agent
+module rag-memory
 
 go 1.24.0
 

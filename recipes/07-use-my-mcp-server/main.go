@@ -45,8 +45,8 @@ func main() {
 			},
 		),
 		robby.WithMCPClient(WithMyMCPServer()),
-		robby.WithMCPTools([]string{"add", "subtract", "multiply", "divide"}), 
-		//robby.WithMCPTools([]string{}), 
+		robby.WithMCPTools([]string{"add", "subtract", "multiply", "divide"}),
+		//robby.WithMCPTools([]string{}),
 		robby.WithMCPResources([]string{}),
 		robby.WithMCPPrompts([]string{}),
 	)
@@ -90,7 +90,7 @@ func main() {
 		fmt.Println("Error reading resource:", err)
 		return
 	}
-	fmt.Println(addRsrc.Description,":")
+	fmt.Println(addRsrc.Description, ":")
 	fmt.Println(addRsrc.Text) // Read the resource for calculator information
 	fmt.Println("--------------------------------------")
 	fmt.Println("Prompts List:")
@@ -117,5 +117,65 @@ func main() {
 	fmt.Println("Prompt Name:", prompt.Name)
 	fmt.Println("Prompt Description:", prompt.Description)
 	fmt.Println(prompt.Messages[0].Role, ":", prompt.Messages[0].Content.Text)
+	fmt.Println("======================================")
+
+	riker, _ := robby.NewAgent(
+		robby.WithDMRClient(
+			context.Background(),
+			"http://model-runner.docker.internal/engines/llama.cpp/v1/",
+		),
+		robby.WithParams(
+			openai.ChatCompletionNewParams{
+				Model:             "ai/qwen2.5:0.5B-F16",
+				Messages:          []openai.ChatCompletionMessageParamUnion{},
+				Temperature:       openai.Opt(0.0),
+				ParallelToolCalls: openai.Bool(true),
+			},
+		),
+		robby.WithMCPClient(WithMyMCPServer()),
+		robby.WithMCPTools([]string{"add", "subtract", "multiply", "divide"}),
+		robby.WithMCPResources([]string{}),
+		robby.WithMCPPrompts([]string{}),
+	)
+
+	systemInstructions, err := riker.ReadResource("info:///calculator")
+	if err != nil {
+		fmt.Println("Error reading resource:", err)
+		return
+	}
+	userInstructions, err := riker.GetPrompt("calculator_prompt", map[string]any{
+		"operation": "add",
+		"a":         25,
+		"b":         50,
+	})
+	if err != nil {
+		fmt.Println("Error getting prompt:", err)
+		return
+	}
+
+	riker.Params.Messages = []openai.ChatCompletionMessageParamUnion{
+		openai.SystemMessage(systemInstructions.Text),
+		openai.UserMessage(userInstructions.Messages[0].Content.Text),
+	}
+
+	toolCalls, err = riker.ToolsCompletion()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("Number of Tool Calls:\n", len(toolCalls))
+	toolCallsJSON, _ = riker.ToolCallsToJSON()
+	fmt.Println("Tool Calls:\n", toolCallsJSON)
+	results, err = riker.ExecuteMCPToolCalls()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("")
+	fmt.Println("Result of the MCP tool calls execution:")
+	for _, result := range results {
+		fmt.Println(result)
+	}
+	fmt.Println("--------------------------------------")
 
 }

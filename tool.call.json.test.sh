@@ -1,2 +1,2 @@
 ##!/bin/bash
-go test -v robby.go tool_call_json_test.go
+go test -v -run TestToolCallsToJSON

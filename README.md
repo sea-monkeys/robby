@@ -1,12 +1,12 @@
 # Robby 🤖
 
-> **Lightweight Go library for building AI Agents with Docker Model Runner and Docker MCP Toolkit**
+> **Lightweight Go library[pattern] for building AI Agents with Docker Model Runner and Docker MCP Toolkit**
 
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Required-2496ED?style=flat&logo=docker)](https://docs.docker.com/model-runner/)
 
-**Robby** is a lightweight Go library that provides design patterns and utilities for building **AI Agents** using the **OpenAI Go SDK** with **[Docker Model Runner](https://docs.docker.com/model-runner/)** and **[Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/toolkit/)**. 
+**Robby** is a lightweight Go library[pattern] that provides design patterns and utilities for building **AI Agents** using the **OpenAI Go SDK** with **[Docker Model Runner](https://docs.docker.com/model-runner/)** and **[Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/toolkit/)**. 
 
 Rather than hiding the OpenAI SDK, Robby enhances your development experience with convenient patterns while preserving full access to the underlying SDK functionality.
 
@@ -91,7 +91,9 @@ Explore comprehensive examples in the [`recipes/`](./recipes/) directory:
 | **[03 - Memory Management](./recipes/03-handle-conversational-memory/)** | Conversation context handling | Multi-turn conversations, history |
 | **[04 - JSON Output](./recipes/04-json-output/)** | Structured data extraction | Schema validation, data parsing |
 | **[05 - Tool Calls](./recipes/05-tool-calls/)** | Custom function execution | Function calling, parallel execution |
-| **[06 - MCP Integration](./recipes/06-mcp-tool-calls/)** | External service integration | Web fetching, API calls, file operations |
+| **[06 - MCP Integration](./recipes/06-mcp-tool-calls/)** | MCP External service integration | MCP tool calls |
+| **[07 - MCP Integration](./recipes/07-use-my-mcp-server/)** | MCP External service integration | MCP tool calls with MCP Server sample |
+| **[08 - RAG in memory](./recipes/08-rag-memory/)** | Retrieval Augmented Generation | Embeddings and Similarity search |
 
 ## 🔧 Core Concepts
 
