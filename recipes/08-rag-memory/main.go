@@ -8,7 +8,7 @@ import (
 	"github.com/sea-monkeys/robby"
 )
 
-
+// INFO--> chunks for the RAG demo
 var chunks = []string{
 	`# The Avengers
 	"The Avengers" is a classic British spy-fi television series that aired from 1961 to 1969. 

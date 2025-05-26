@@ -85,5 +85,13 @@
             "borderRadius": "3px",
             "isWholeLine": false
         },
+        {
+            "text": "INFO-->",
+            "color": "#ffffff",
+            "backgroundColor": "#236DD5",
+            "border": "1px solid #236DD5",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
     ]
 }
