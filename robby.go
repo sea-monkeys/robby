@@ -49,8 +49,15 @@ type Agent struct {
 
 	Store MemoryVectorStore
 
+	// --- MCP Client ---
 	mcpClient *mcp_golang.Client
 	mcpCmd    *exec.Cmd
+	// QUESTION: is it a good idea to make an agent a MCP Server?
+
+	// --- A2A Server ---
+
+
+	// --- A2A Client ---
 
 	lastError error
 }
