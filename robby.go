@@ -36,9 +36,9 @@ type Prompt struct {
 }
 
 type Agent struct {
-	ctx       context.Context
-	dmrClient openai.Client
-	Params    openai.ChatCompletionNewParams
+	ctx             context.Context
+	dmrClient       openai.Client
+	Params          openai.ChatCompletionNewParams
 	EmbeddingParams openai.EmbeddingNewParams
 
 	Tools     []openai.ChatCompletionToolParam
@@ -55,12 +55,57 @@ type Agent struct {
 	// QUESTION: is it a good idea to make an agent a MCP Server?
 
 	// --- A2A Server ---
+	AgentCard AgentCard
 
+	AgentCallback func(taskRequest TaskRequest) (TaskResponse, error)
 
 	// --- A2A Client ---
 
 	lastError error
 }
+
+// --- BEGIN: A2A Protocol ---
+
+// AgentCard represents the metadata for this agent
+type AgentCard struct {
+	Name         string           `json:"name"`
+	Description  string           `json:"description"`
+	URL          string           `json:"url"`
+	Version      string           `json:"version"`
+	Capabilities map[string]any   `json:"capabilities"`
+	Skills       []map[string]any `json:"skills,omitempty"` // Optional, for storing skills related to the agent
+}
+
+// TaskRequest represents an incoming A2A task request
+type TaskRequest struct {
+	ID      string       `json:"id"`
+	Message AgentMessage `json:"message"`
+}
+
+// Message represents a message structure
+type AgentMessage struct {
+	Role  string     `json:"role,omitempty"`
+	Parts []TextPart `json:"parts"`
+}
+
+// TextPart represents a text part of a message
+type TextPart struct {
+	Text string `json:"text"`
+}
+
+// TaskStatus represents the status of a task
+type TaskStatus struct {
+	State string `json:"state"`
+}
+
+// TaskResponse represents the response task structure
+type TaskResponse struct {
+	ID       string         `json:"id"`
+	Status   TaskStatus     `json:"status"`
+	Messages []AgentMessage `json:"messages"`
+}
+
+// --- END: A2A Protocol ---
 
 type AgentOption func(*Agent)
 

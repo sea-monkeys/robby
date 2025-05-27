@@ -86,10 +86,90 @@
             "isWholeLine": false
         },
         {
-            "text": "INFO-->",
+            "text": "INFO:",
             "color": "#ffffff",
             "backgroundColor": "#236DD5",
             "border": "1px solid #236DD5",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "EXAMPLE:",
+            "color": "#ffffff",
+            "backgroundColor": "#C51ACE",
+            "border": "1px solid #C51ACE",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "WAIT:",
+            "color": "#ffffff",
+            "backgroundColor": "#9B1111",
+            "border": "1px solid #9B1111",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "BEGIN:",
+            "color": "#ffffff",
+            "backgroundColor": "#000000",
+            "border": "1px solid #000000",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "END:",
+            "color": "#ffffff",
+            "backgroundColor": "#000000",
+            "border": "1px solid #000000",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "STEP 1:",
+            "color": "#ffffff",
+            "backgroundColor": "#27A34F",
+            "border": "1px solid #27A34F",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "STEP 2:",
+            "color": "#ffffff",
+            "backgroundColor": "#2887C2",
+            "border": "1px solid #2887C2",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "STEP 3:",
+            "color": "#ffffff",
+            "backgroundColor": "#3330C4",
+            "border": "1px solid #3330C4",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "STEP 4:",
+            "color": "#ffffff",
+            "backgroundColor": "#7D30C4",
+            "border": "1px solid #7D30C4",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "STEP 5:",
+            "color": "#ffffff",
+            "backgroundColor": "#BA30C4",
+            "border": "1px solid #BA30C4",
+            "borderRadius": "3px",
+            "isWholeLine": false
+        },
+        {
+            "text": "STEP 6:",
+            "color": "#ffffff",
+            "backgroundColor": "#B91F5F",
+            "border": "1px solid #B91F5F",
             "borderRadius": "3px",
             "isWholeLine": false
         },
