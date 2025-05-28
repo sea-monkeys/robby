@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+//var taskMutex sync.Mutex // Mutex for protecting concurrent access
+
 // IMPORTANT: minimmal implementation of an A2A server for Robby Agents
 
 // Serve the Agent Card at the well-known URL
@@ -22,9 +24,21 @@ func (agent *Agent) getAgentCard(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(agent.AgentCard)
 }
 
+/* NOTE:
+Explanation
+Mutex Initialization: A sync.Mutex named taskMutex is declared globally or as part of the Agent struct.
+Locking: The taskMutex.Lock() call ensures that only one goroutine can execute the handleTask function at a time.
+Unlocking: The defer taskMutex.Unlock() ensures the mutex is released when the function exits, even if an error occurs.
+Alternative: Use sync.RWMutex
+If you need to allow concurrent reads but protect writes, you can use sync.RWMutex instead. Replace taskMutex.Lock() with taskMutex.RLock() for read operations and taskMutex.Lock() for write operations.
+
+This approach ensures thread safety for the handleTask function and avoids race conditions when handling concurrent requests.
+*/
+
 // Handle incoming task requests at the A2A endpoint
 func (agent *Agent) handleTask(w http.ResponseWriter, r *http.Request) {
-	// TODO: TEST: taskRequest.JSONRpcVersion
+	//taskMutex.Lock()         // Lock the mutex
+	//defer taskMutex.Unlock() // Unlock the mutex when the function exits
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

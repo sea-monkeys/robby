@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	Riker, _ := robby.NewAgent(
+	Bill, _ := robby.NewAgent(
 		robby.WithOllamaClient(
 			context.Background(),
 			"http://host.docker.internal:11434/v1",
@@ -30,7 +30,7 @@ func main() {
 	agentBaseURL := "http://0.0.0.0:8080"
 
 	/*
-	agentCard, err := Riker.Ping(agentBaseURL)
+	agentCard, err := Bill.Ping(agentBaseURL)
 	if err != nil {
 		fmt.Println("Error pinging agent:", err)
 		return
@@ -51,17 +51,17 @@ func main() {
 				Role: "user",
 				Parts: []robby.TextPart{
 					{
-						Text: "What is the best pizza in the world?",
+						Text: "Bob Morane",
 					},
 				},
 			},
 			// NOTE: I don't know how to query a specific agent skill
 			MetaData: map[string]any{
-				"skill": "ask_for_something",
+				"skill": "say_hello_world",
 			},
 		},
 	}
-	taskResponse, err := Riker.SendToAgent(agentBaseURL, taskRequest)
+	taskResponse, err := Bill.SendToAgent(agentBaseURL, taskRequest)
 	if err != nil {
 		fmt.Println("Error sending task request:", err)
 		return

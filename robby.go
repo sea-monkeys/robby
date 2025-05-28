@@ -95,11 +95,15 @@ type TaskRequest struct {
 type AgentMessage struct {
 	Role  string     `json:"role,omitempty"`
 	Parts []TextPart `json:"parts"`
+	MessageID string `json:"messageId,omitempty"` // Optional, for storing message ID
+	TaskID     string `json:"taskId,omitempty"`    // Optional, for storing task ID
+	ContextID string `json:"contextId,omitempty"` // Optional, for storing context ID
 }
 
 // TextPart represents a text part of a message
 type TextPart struct {
 	Text string `json:"text"`
+	Type string `json:"type"` // Should be "text" for text parts
 }
 
 // TaskStatus represents the status of a task
@@ -109,12 +113,31 @@ type TaskStatus struct {
 
 // TODO: make the response compliant with the A2A protocol
 // REF: https://google-a2a.github.io/A2A/specification/#92-basic-execution-synchronous-polling-style
+
+type Artifact struct {
+	ArtifactID string     `json:"artifactId"`
+	Name       string     `json:"name"`
+	Parts      []TextPart `json:"parts"` // Parts of the artifact, e.g., text, images, etc.
+}
+
+type Result struct {
+	ID        string          `json:"id"`
+	ContextID string          `json:"contextId"`
+	Status    TaskStatus      `json:"status"`
+	Artifacts []Artifact      `json:"artifacts,omitempty"` // Optional, for storing artifacts related to the task
+	History   []AgentMessage  `json:"history,omitempty"`   // Optional, for storing message history related to the task
+	Kind      string          `json:"kind"` // Should be "task"
+	Metadata  map[string]any `json:"metadata,omitempty"` // Optional, for additional metadata
+}
+
 // TaskResponse represents the response task structure
 type TaskResponse struct {
+	JSONRpcVersion string             `json:"jsonrpc"` // Should be "2.0"
 	ID       string         `json:"id"`
-	Status   TaskStatus     `json:"status"`
-	Messages []AgentMessage `json:"messages"`
+	Result   Result         `json:"result"` // The result of the task execution
+
 }
+
 
 // --- END: A2A Protocol ---
 

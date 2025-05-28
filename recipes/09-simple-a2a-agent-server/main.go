@@ -3,10 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/openai/openai-go"
 	"github.com/sea-monkeys/robby"
 )
+
+//var callbackMutex sync.Mutex // Mutex to serialize access to AgentCallback
+var callbackMutex sync.RWMutex // Use RWMutex for concurrent reads
 
 func main() {
 
@@ -18,10 +22,9 @@ func main() {
 		// STEP 1: Define Completion PArameters
 		robby.WithParams(
 			openai.ChatCompletionNewParams{
-				Model: "ai/qwen2.5:0.5B-F16",
-				Messages: []openai.ChatCompletionMessageParamUnion{
-					openai.SystemMessage("Your name is Bob, You are a simple A2A agent server"),
-				},
+				//Model:       "ai/qwen2.5:0.5B-F16",
+				Model:       "ai/qwen2.5:3B-F16",
+				Messages:    []openai.ChatCompletionMessageParamUnion{},
 				Temperature: openai.Opt(0.5),
 			},
 		),
@@ -48,11 +51,23 @@ func main() {
 		),
 	)
 
-	// STEP 3: Define the Agent Callback function (triggered by A2A Task requests)
+	/* NOTE:
+		Explanation
+		Mutex Initialization: A sync.Mutex named callbackMutex is declared globally.
+		Locking: callbackMutex.Lock() ensures that only one request is processed at a time.
+		Unlocking: defer callbackMutex.Unlock() releases the lock after the request is processed.
+		This approach guarantees serialized handling of requests, ensuring that the second request is processed only after the first one is completed.
+
+	*/
+
+	// Serialize access to AgentCallback using a mutex
 	Bob.AgentCallback = func(taskRequest robby.TaskRequest) (robby.TaskResponse, error) {
+		callbackMutex.Lock()         // Lock the mutex before processing the request
+		defer callbackMutex.Unlock() // Unlock the mutex after processing the request
+
 		// According to A2A spec, user message is in taskRequest.Message.Parts[0].Text
 		userMessage := taskRequest.Params.Message.Parts[0].Text
-		
+
 		fmt.Println("🟢 Processing task request:", taskRequest.ID)
 		fmt.Println("🔵 UserMessage:", userMessage)
 		fmt.Println("🟡 TaskRequest Metadata:", taskRequest.Params.MetaData)
@@ -61,28 +76,25 @@ func main() {
 		switch taskRequest.Params.MetaData["skill"] {
 		case "ask_for_something":
 
-			Bob.Params.Messages = append(
-				Bob.Params.Messages,
+			Bob.Params.Messages = []openai.ChatCompletionMessageParamUnion{
+				openai.SystemMessage("You are Bob, a simple A2A agent. You can answer questions."),
 				openai.UserMessage(userMessage),
-			)
+			}
 
 		case "say_hello_world":
 
-			Bob.Params.Messages = append(
-				Bob.Params.Messages,
-				openai.UserMessage("Say hello world to "+userMessage+" from Bob, with emojis."),
-			)
-
-			Bob.Params.Messages = append(
-				Bob.Params.Messages,
-				openai.UserMessage("Say hello world to "+userMessage+" from Bob, with emojis."),
-			)
+			Bob.Params.Messages = []openai.ChatCompletionMessageParamUnion{
+				openai.SystemMessage("You are Bob, a simple A2A agent. You can answer questions."),
+				openai.UserMessage("Say hello world to " + userMessage + " from Bob, with emojis."),
+			}
 
 		default:
-			Bob.Params.Messages = append(
-				Bob.Params.Messages,
-				openai.UserMessage("Be nice, and explain that "+taskRequest.ID+" is not a valid task ID."),
-			)
+
+			Bob.Params.Messages = []openai.ChatCompletionMessageParamUnion{
+				openai.SystemMessage("You are Bob, a simple A2A agent. You can answer questions."),
+				openai.UserMessage("Be nice, and explain that " + taskRequest.ID + " is not a valid task ID."),
+			}
+
 		}
 
 		// STEP 5: Generate a response using the DMR client + Chat Completion
@@ -97,18 +109,28 @@ func main() {
 		// We'll return a Task object with final state = 'completed' and agent message
 		// STEP 6: Create and return the response task
 		responseTask := robby.TaskResponse{
-			ID:     taskRequest.ID, // use the same task ID
-			Status: robby.TaskStatus{State: "completed"},
-			Messages: []robby.AgentMessage{
-				taskRequest.Params.Message, // include original user message in history
-				{
-					Role: "agent", // agent's response
-					Parts: []robby.TextPart{
-						{Text: responseText}, // agent message content as TextPart
+			ID:             taskRequest.ID, // use the same task ID
+			JSONRpcVersion: "2.0",
+			Result: robby.Result{
+				Status: robby.TaskStatus{
+					State: "completed",
+				},
+				History: []robby.AgentMessage{
+					{
+						Role: "assistant",
+						Parts: []robby.TextPart{
+							{
+								Text: responseText,
+								Type: "text",
+							},
+						},
 					},
 				},
+				Kind:     "task",
+				Metadata: map[string]any{},
 			},
 		}
+		fmt.Println("🟩 Response Task Id:", responseTask.ID)
 
 		return responseTask, nil
 
