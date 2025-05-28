@@ -18,6 +18,18 @@ func WithDMRClient(ctx context.Context, baseURL string) AgentOption {
 	}
 }
 
+// WithOllamaClient initializes the Agent with an Ollama client using the provided context and base URL.
+func WithOllamaClient(ctx context.Context, baseURL string) AgentOption {
+	return func(agent *Agent) {
+		agent.ctx = ctx
+		agent.dmrClient = openai.NewClient(
+			option.WithBaseURL(baseURL),
+			option.WithAPIKey(""),
+		)
+	}
+}
+// NOTE: WithOllamaClient and WithDMRClient are similar, but they may be used for different purposes in the future.
+
 // WithParams sets the parameters for the Agent's chat completion requests.
 func WithParams(params openai.ChatCompletionNewParams) AgentOption {
 	return func(agent *Agent) {

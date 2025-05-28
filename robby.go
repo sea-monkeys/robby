@@ -76,10 +76,19 @@ type AgentCard struct {
 	Skills       []map[string]any `json:"skills,omitempty"` // Optional, for storing skills related to the agent
 }
 
+type AgentMessageParams struct {
+	Message  AgentMessage   `json:"message"`
+	MetaData map[string]any `json:"metadata,omitempty"` // Optional, for additional metadata
+}
+
+// QUESTION: This is a message, shoul I change the name
+// REF: https://google-a2a.github.io/A2A/specification/#92-basic-execution-synchronous-polling-style
 // TaskRequest represents an incoming A2A task request
 type TaskRequest struct {
-	ID      string       `json:"id"`
-	Message AgentMessage `json:"message"`
+	JSONRpcVersion string             `json:"jsonrpc"` // Should be "2.0"
+	ID             string             `json:"id"`
+	Params         AgentMessageParams `json:"params"`
+	Method         string             `json:"method,omitempty"` // Optional, for specifying the method of the task
 }
 
 // Message represents a message structure
@@ -98,6 +107,8 @@ type TaskStatus struct {
 	State string `json:"state"`
 }
 
+// TODO: make the response compliant with the A2A protocol
+// REF: https://google-a2a.github.io/A2A/specification/#92-basic-execution-synchronous-polling-style
 // TaskResponse represents the response task structure
 type TaskResponse struct {
 	ID       string         `json:"id"`

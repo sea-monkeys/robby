@@ -48,23 +48,31 @@ func main() {
 		),
 	)
 
-
 	// STEP 3: Define the Agent Callback function (triggered by A2A Task requests)
 	Bob.AgentCallback = func(taskRequest robby.TaskRequest) (robby.TaskResponse, error) {
 		// According to A2A spec, user message is in taskRequest.Message.Parts[0].Text
-		userMessage := taskRequest.Message.Parts[0].Text
-		fmt.Println("✋ Received task request:", taskRequest.ID, "with message:", userMessage, "from role:", taskRequest.Message.Role)
-		fmt.Println(robby.TaskRequestToJSONString(taskRequest)) // Print task request in JSON format
+		userMessage := taskRequest.Params.Message.Parts[0].Text
+		
+		fmt.Println("🟢 Processing task request:", taskRequest.ID)
+		fmt.Println("🔵 UserMessage:", userMessage)
+		fmt.Println("🟡 TaskRequest Metadata:", taskRequest.Params.MetaData)
 
 		// STEP 4: Process the task request based on the ID
-		switch taskRequest.ID {
+		switch taskRequest.Params.MetaData["skill"] {
 		case "ask_for_something":
+
 			Bob.Params.Messages = append(
 				Bob.Params.Messages,
 				openai.UserMessage(userMessage),
 			)
 
 		case "say_hello_world":
+
+			Bob.Params.Messages = append(
+				Bob.Params.Messages,
+				openai.UserMessage("Say hello world to "+userMessage+" from Bob, with emojis."),
+			)
+
 			Bob.Params.Messages = append(
 				Bob.Params.Messages,
 				openai.UserMessage("Say hello world to "+userMessage+" from Bob, with emojis."),
@@ -77,11 +85,13 @@ func main() {
 			)
 		}
 
-		// STEP 5: Generate a response using the DMR client + Chat Completion 
+		// STEP 5: Generate a response using the DMR client + Chat Completion
 		responseText, err := Bob.ChatCompletion()
 		if err != nil {
 			return robby.TaskResponse{}, fmt.Errorf("error generating response: %w", err)
 		}
+
+		fmt.Println("🤖 Generated response:", responseText)
 
 		// Formulate response in A2A Task format
 		// We'll return a Task object with final state = 'completed' and agent message
@@ -90,7 +100,7 @@ func main() {
 			ID:     taskRequest.ID, // use the same task ID
 			Status: robby.TaskStatus{State: "completed"},
 			Messages: []robby.AgentMessage{
-				taskRequest.Message, // include original user message in history
+				taskRequest.Params.Message, // include original user message in history
 				{
 					Role: "agent", // agent's response
 					Parts: []robby.TextPart{

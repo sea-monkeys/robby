@@ -7,38 +7,61 @@ curl -X GET http://0.0.0.0:8080/.well-known/agent.json \
   | jq '.'
 ```
 
+c
+
+
+
 **ask_for_something**:
 ```bash
 # This should echo back the message 
-curl -X POST http://0.0.0.0:8080/tasks/send \
+curl -X POST http://0.0.0.0:8080 \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -d '{
-    "id": "ask_for_something",
-    "message": {
-      "role": "user",
-      "parts": [
-        {
-          "text": "What is the best pizza in the world?"
-        }
-      ]
+    "jsonrpc": "2.0",
+    "id": "1111",
+    "method": "message/send",
+    "params": {
+      "message": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "What is the best pizza in the world?"
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "ask_for_something"
+      }
     }
   }' \
   | jq '.'
 ```
 
+
+
+
 **say_hello_world**:
 ```bash
-curl -X POST http://0.0.0.0:8080/tasks/send \
+curl -X POST http://0.0.0.0:8080 \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -d '{
-    "id": "say_hello_world",
-    "message": {
-      "role": "user", 
-      "parts": [
-        {
-          "text": "Bob Morane"
-        }
-      ]
+    "jsonrpc": "2.0",
+    "id": "2222",
+    "method": "message/send",
+    "params": {
+      "message": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Bob Morane"
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "say_hello_world"
+      }
     }
   }' \
   | jq '.'
@@ -48,40 +71,27 @@ curl -X POST http://0.0.0.0:8080/tasks/send \
 
 **another_task**:
 ```bash
-curl -X POST http://0.0.0.0:8080/tasks/send \
+curl -X POST http://0.0.0.0:8080 \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
   -d '{
-    "id": "another_task",
-    "message": {
-      "role": "user", 
-      "parts": [
-        {
-          "text": "Why the sky is blue?"
-        }
-      ]
+    "jsonrpc": "2.0",
+    "id": "2222",
+    "method": "message/send",
+    "params": {
+      "message": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Why the sky is blue?"
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "another_task"
+      }
     }
   }' \
   | jq '.'
 ```
 
-
-
-```bash
-# Test error handling - malformed request (missing parts)
-curl -X POST http://0.0.0.0:8080/tasks/send \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": "task-error",
-    "message": {
-      "role": "user"
-    }
-  }' \
-  | jq '.'
-```
-
-
-```bash
-#Test method not allowed (GET on /tasks/send)
-curl -X GET http://0.0.0.0:8080/tasks/send \
-  -H "Content-Type: application/json"
-```
