@@ -51,13 +51,13 @@ func main() {
 				Role: "user",
 				Parts: []robby.TextPart{
 					{
-						Text: "Bob Morane",
+						Text: "Jean-Luc Picard",
 					},
 				},
 			},
 			// NOTE: I don't know how to query a specific agent skill
 			MetaData: map[string]any{
-				"skill": "say_hello_world",
+				"skill": "greetings",
 			},
 		},
 	}
